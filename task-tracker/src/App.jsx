@@ -4,13 +4,14 @@ import { TaskCard } from './components/TaskCard.jsx';
 import { TaskForm } from './components/TaskForm.jsx';
 import './App.css';
 
-const tasks = [
+const initialTasks = [
   { id: 1, title: 'Learn JSX', completed: true },
   { id: 2, title: 'Practise React state', completed: false },
   { id: 3, title: 'Build a Node.js API', completed: false },
 ];
 
 function App() {
+  const [tasks, setTasks] = useState(initialTasks);
   const [filter, setFilter] = useState('all');
 
   const filteredTasks = tasks.filter((task) => {
@@ -26,7 +27,35 @@ function App() {
   });
 
   function handleAddTask(title) {
-    console.log('Uue ülesande pealkiri:', title);
+    setTasks((previousTasks) => {
+      const nextId = Math.max(0, ...previousTasks.map((task) => task.id)) + 1;
+
+      const newTask = {
+        id: nextId,
+        title: title,
+        completed: false,
+      };
+
+      return [...previousTasks, newTask];
+    });
+  }
+
+  function handleToggleTask(taskId) {
+    setTasks((previousTasks) =>
+      previousTasks.map((task) => {
+        if (task.id === taskId) {
+          return { ...task, completed: !task.completed };
+        }
+
+        return task;
+      }),
+    );
+  }
+
+  function handleDeleteTask(taskId) {
+    setTasks((previousTasks) =>
+      previousTasks.filter((task) => task.id !== taskId),
+    );
   }
 
   return (
@@ -61,7 +90,12 @@ function App() {
         {filteredTasks.length === 0 && <p>No tasks found</p>}
 
         {filteredTasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <TaskCard
+            key={task.id}
+            task={task}
+            onToggle={handleToggleTask}
+            onDelete={handleDeleteTask}
+          />
         ))}
       </main>
     </div>
