@@ -4,6 +4,7 @@ import { TaskCard } from './components/TaskCard.jsx';
 import { TaskForm } from './components/TaskForm.jsx';
 import { Routes, Route, NavLink } from 'react-router-dom';
 import { TaskDetails } from './components/TaskDetails.jsx';
+import { PageSection } from './components/PageSection.jsx';
 import { getTasks } from './services/taskApi.js';
 import './App.css';
 
@@ -108,17 +109,16 @@ function App() {
           <Route
             path="/"
             element={
-              <section>
-                <h2>Avaleht</h2>
+              <PageSection title="Avaleht">
                 <p>Siin saad oma ülesandeid hallata.</p>
-              </section>
+              </PageSection>
             }
           />
 
           <Route
             path="/tasks"
             element={
-              <>
+              <PageSection title="Minu ülesanded">
                 <TaskForm onAddTask={handleAddTask} />
                 <div>
                   <button
@@ -154,7 +154,7 @@ function App() {
                     onDelete={handleDeleteTask}
                   />
                 ))}
-              </>
+              </PageSection>
             }
           />
 
