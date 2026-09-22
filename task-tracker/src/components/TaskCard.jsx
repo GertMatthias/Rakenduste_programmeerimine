@@ -1,12 +1,10 @@
 import './TaskCard.css';
 
-export function TaskCard() {
-  const title = 'Learn JSX';
-
+export function TaskCard({ task }) {
   return (
     <article className="task-card">
-      <h2>{title}</h2>
-      <p>Completed</p>
+      <h2>{task.title}</h2>
+      <p>{task.completed ? 'Completed' : 'Not completed'}</p>
     </article>
   );
 }
