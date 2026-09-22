@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react';
 import { Header } from './components/Header.jsx';
 import { TaskCard } from './components/TaskCard.jsx';
+import { TaskForm } from './components/TaskForm.jsx';
 import './App.css';
 
 const tasks = [
@@ -24,10 +25,15 @@ function App() {
     return true;
   });
 
+  function handleAddTask(title) {
+    console.log('Uue ülesande pealkiri:', title);
+  }
+
   return (
     <div className="app">
       <Header />
       <main>
+        <TaskForm onAddTask={handleAddTask} />
         <div>
           <button
             type="button"
