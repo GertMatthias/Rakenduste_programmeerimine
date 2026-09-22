@@ -1,9 +1,12 @@
+import { Link } from 'react-router-dom';
 import './TaskCard.css';
 
 export function TaskCard({ task, onToggle, onDelete }) {
   return (
     <article className="task-card">
-      <h2>{task.title}</h2>
+      <h2>
+        <Link to={`/tasks/${task.id}`}>{task.title}</Link>
+      </h2>
       <p>{task.completed ? 'Completed' : 'Not completed'}</p>
 
       <button type="button" onClick={() => onToggle(task.id)}>

@@ -2,6 +2,8 @@
 import { Header } from './components/Header.jsx';
 import { TaskCard } from './components/TaskCard.jsx';
 import { TaskForm } from './components/TaskForm.jsx';
+import { Routes, Route, NavLink } from 'react-router-dom';
+import { TaskDetails } from './components/TaskDetails.jsx';
 import './App.css';
 
 const initialTasks = [
@@ -61,42 +63,75 @@ function App() {
   return (
     <div className="app">
       <Header />
+      <nav aria-label="Peamenüü">
+        <NavLink to="/" end>
+          Avaleht
+        </NavLink>
+        {' | '}
+        <NavLink to="/tasks">Ülesanded</NavLink>
+      </nav>
       <main>
-        <TaskForm onAddTask={handleAddTask} />
-        <div>
-          <button
-            type="button"
-            onClick={() => setFilter('all')}
-            aria-pressed={filter === 'all'}
-          >
-            Kõik
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('completed')}
-            aria-pressed={filter === 'completed'}
-          >
-            Tehtud
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('incomplete')}
-            aria-pressed={filter === 'incomplete'}
-          >
-            Tegemata
-          </button>
-        </div>
-
-        {filteredTasks.length === 0 && <p>No tasks found</p>}
-
-        {filteredTasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onToggle={handleToggleTask}
-            onDelete={handleDeleteTask}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <section>
+                <h2>Avaleht</h2>
+                <p>Siin saad oma ülesandeid hallata.</p>
+              </section>
+            }
           />
-        ))}
+
+          <Route
+            path="/tasks"
+            element={
+              <>
+                <TaskForm onAddTask={handleAddTask} />
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setFilter('all')}
+                    aria-pressed={filter === 'all'}
+                  >
+                    Kõik
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilter('completed')}
+                    aria-pressed={filter === 'completed'}
+                  >
+                    Tehtud
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilter('incomplete')}
+                    aria-pressed={filter === 'incomplete'}
+                  >
+                    Tegemata
+                  </button>
+                </div>
+
+                {filteredTasks.length === 0 && <p>No tasks found</p>}
+
+                {filteredTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={handleToggleTask}
+                    onDelete={handleDeleteTask}
+                  />
+                ))}
+              </>
+            }
+          />
+
+          <Route
+            path="/tasks/:taskId"
+            element={<TaskDetails tasks={tasks} />}
+          />
+
+          <Route path="*" element={<h2>Lehte ei leitud</h2>} />
+        </Routes>
       </main>
     </div>
   );
