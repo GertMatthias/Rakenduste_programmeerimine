@@ -1,20 +1,45 @@
-﻿import { useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Header } from './components/Header.jsx';
 import { TaskCard } from './components/TaskCard.jsx';
 import { TaskForm } from './components/TaskForm.jsx';
 import { Routes, Route, NavLink } from 'react-router-dom';
 import { TaskDetails } from './components/TaskDetails.jsx';
+import { getTasks } from './services/taskApi.js';
 import './App.css';
 
-const initialTasks = [
-  { id: 1, title: 'Learn JSX', completed: true },
-  { id: 2, title: 'Practise React state', completed: false },
-  { id: 3, title: 'Build a Node.js API', completed: false },
-];
-
 function App() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadTasks() {
+      try {
+        const loadedTasks = await getTasks();
+
+        if (!ignore) {
+          setTasks(loadedTasks);
+        }
+      } catch (error) {
+        if (!ignore) {
+          setError(error.message);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadTasks();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const filteredTasks = tasks.filter((task) => {
     if (filter === 'completed') {
@@ -58,6 +83,14 @@ function App() {
     setTasks((previousTasks) =>
       previousTasks.filter((task) => task.id !== taskId),
     );
+  }
+
+  if (loading) {
+    return <p role="status">Laadin ülesandeid...</p>;
+  }
+
+  if (error) {
+    return <p role="alert">{error}</p>;
   }
 
   return (
