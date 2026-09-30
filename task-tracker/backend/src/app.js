@@ -3,6 +3,9 @@ import { tasks } from './data/tasks.js';
 import { getAllTasks, getTaskById } from './taskFunctions.js';
 
 export const app = express();
+let nextTaskId = Math.max(0, ...tasks.map((task) => task.id)) + 1;
+
+app.use(express.json());
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -23,6 +26,25 @@ app.get('/api/tasks', (req, res) => {
   const filteredTasks = tasks.filter((task) => task.completed === isCompleted);
 
   res.json(filteredTasks);
+});
+
+app.post('/api/tasks', (req, res) => {
+  const title = req.body?.title;
+
+  if (typeof title !== 'string' || title.trim() === '') {
+    return res.status(400).json({ error: 'Title must be a non-empty string' });
+  }
+
+  const task = {
+    id: nextTaskId,
+    title: title.trim(),
+    completed: false,
+  };
+
+  nextTaskId += 1;
+  tasks.push(task);
+
+  res.status(201).json(task);
 });
 
 app.get('/api/tasks/:id', (req, res) => {

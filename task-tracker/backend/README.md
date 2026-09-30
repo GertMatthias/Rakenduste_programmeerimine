@@ -50,6 +50,26 @@ Filtreerimine ei muuda algandmeid.
 Pärast backend'i koodi muutmist peata server `Ctrl+C` abil ja käivita uuesti
 `npm start`, et uus kood kasutusele võetaks.
 
+## Ülesande loomine
+
+`POST /api/tasks` võtab vastu JSON-keha `{"title":"Learn Express"}`.
+Saada päis `Content-Type: application/json`, et `express.json()` loeks keha.
+Server eemaldab pealkirja ääretühikud, määrab unikaalse täisarvulise ID ja
+`completed: false` ning tagastab loodud ülesande staatusega `201`.
+Puuduv, mitte-tekstiline, tühi või ainult tühikutest koosnev pealkiri annab `400`.
+Kliendi saadetud `id` ja `completed` ei määra uue ülesande väärtusi.
+
+Näide PowerShellis (server peab eraldi terminalis töötama):
+
+```powershell
+Invoke-RestMethod -Method Post -Uri 'http://localhost:3000/api/tasks' -ContentType 'application/json' -Body '{"title":"  Learn Express  "}'
+```
+
+Seejärel ava brauseris `http://localhost:3000/api/tasks`, et näha uut ülesannet.
+Brauseri aadressiriba teeb GET-päringu, mitte POST-päringut.
+Andmed on praegu serveri mälus: taaskäivitamine taastab algandmed.
+Reacti vorm ei ole veel selle API-ga ühendatud.
+
 ## Moodulid
 
 - `src/app.js`: loob ja ekspordib Expressi rakenduse ning määrab marsruudid.
