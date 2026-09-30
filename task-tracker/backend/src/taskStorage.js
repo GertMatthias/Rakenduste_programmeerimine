@@ -10,9 +10,15 @@ export async function loadTasks(filePath) {
     throw error;
   }
 
-  const tasks = JSON.parse(content);
+  let tasks;
+  try {
+    tasks = JSON.parse(content);
+  } catch (error) {
+    throw new Error(`Invalid JSON in task file: ${filePath}`, { cause: error });
+  }
+
   if (!Array.isArray(tasks)) {
-    throw new Error('Task data must be an array');
+    throw new Error(`Task data must be an array: ${filePath}`);
   }
   return tasks;
 }
