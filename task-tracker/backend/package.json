@@ -5,10 +5,13 @@
   "description": "Task Trackeri backend kooliülesannete jaoks",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
 }

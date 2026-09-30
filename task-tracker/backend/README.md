@@ -15,19 +15,31 @@ npm ci
 npm start
 ```
 
-Programm prindib terminali tervituse, kõik ülesanded, ID-ga 2 ülesande,
-tehtud ülesanded ning puuduva ID ja tühja loendi näited. Seejärel lõpetab töö.
-Praegu ei käivitata veebiserverit. Backend'il ei ole veel väliseid sõltuvusi.
+Server jääb tööle pordil 3000. Ava brauseris
+`http://localhost:3000/api/health`: vastuse staatus on `200` ja JSON-sisu
+`{"status":"ok"}`. Serveri peatamiseks vajuta terminalis `Ctrl+C`.
 
-`npm start` käivitab backend'i `package.json` failis määratud käsu `node index.js`.
+`localhost` tähendab sinu enda arvutit ja port eristab sellel töötavaid teenuseid.
+Backend töötab frontend'i Vite'i arendusserverist eraldi protsessina.
+Praegu on olemas ainult tervisekontrolli marsruut; `/` vastab `404`-ga.
+Kui näed viga `EADDRINUSE`, on port 3000 juba kasutusel: peata varasem
+backend'i protsess selle terminalis, seejärel käivita uuesti.
+
+`npm start` käivitab backend'i `package.json` failis määratud käsu `node src/server.js`.
 Käivita see backend'i kaustas, et npm kasutaks õiget `package.json` faili.
 
 ## Moodulid
 
+- `src/app.js`: loob ja ekspordib Expressi rakenduse ning määrab marsruudid.
+- `src/server.js`: impordib rakenduse ja käivitab pordi kuulamise.
 - `src/data/tasks.js`: ekspordib näidisandmed.
 - `src/taskFunctions.js`: ekspordib funktsioonid `getAllTasks(tasks)`,
   `getTaskById(tasks, id)` ja `getCompletedTasks(tasks)`.
 - `index.js`: impordib andmed ja funktsioonid ning kuvab tulemused.
+
+Varasemat moodulite näidet saab endiselt käivitada käsuga `node index.js`.
+Rakenduse importimine üksi serverit ei käivita: see võimaldab seda hiljem
+testides kasutada ilma serverit käsitsi käivitamata.
 
 `"type": "module"` lubab Node.js-is `.js` failides kasutada `import` ja `export`
 süntaksit. Suhtelistes importides kasutame `.js` faililaiendit.
@@ -43,7 +55,7 @@ jagatud algse massiiviga.
 - `package-lock.json`: sõltuvuste täpsed versioonid; kuulub Giti ajalukku.
 - `node_modules`: paigaldatud paketid; ei kuulu Giti ajalukku. Ülemkausta
   `.gitignore` välistab selle ka backend'is.
-- `dependencies`: rakenduse tööks vajalikud paketid, näiteks tulevikus Express.
+- `dependencies`: rakenduse tööks vajalikud paketid, näiteks Express.
 - `devDependencies`: arendamise ja testimise tööriistad.
 
 `npm install` paigaldab sõltuvused ja vajadusel uuendab lukufaili. Uue paketi
