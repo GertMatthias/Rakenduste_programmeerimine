@@ -94,6 +94,31 @@ Mõlema marsruudi puhul annab puuduv ülesanne `404` ja vigane ID `400`.
 Pärast kustutamist ei sisalda `GET /api/tasks` enam seda ülesannet ning
 `GET /api/tasks/2` annab `404`. Taaskäivitamine taastab praegu algandmed.
 
+## Middleware ja veakäsitlus
+
+Päringu töötlemise järjekord `app.js` failis:
+
+1. Logija registreerib vastuse lõppemise kuulaja ja kutsub `next()`.
+2. `express.json()` loeb JSON-keha.
+3. Marsruudid töötlevad päringut.
+4. Kui marsruuti ei leita, saadetakse `404` ja `{"error":"Route not found"}`.
+5. Nelja parameetriga `errorHandler(error, req, res, next)` käsitleb vigu.
+
+Terminali ilmub näiteks `GET /api/tasks 200`. `next()` jätkab järgmise
+middleware'iga; `next(error)` suunab päringu veakäsitlusse.
+Valideerimisvead ja vigane JSON annavad `400`, liiga suur keha `413`.
+Ootamatu serveriviga annab `500` ja `{"error":"Internal server error"}`.
+Vea tehnilised detailid logitakse serveris, mitte ei saadeta kliendile.
+
+Proovi brauseris `http://localhost:3000/api/olematu`, et näha käsitletud
+404-viga. Vigast JSON-i saab saata PowerShellist:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri 'http://localhost:3000/api/tasks' -ContentType 'application/json' -Body '{'
+```
+
+PowerShell teatab HTTP-veast, sest vastuse staatus on `400`.
+
 ## Moodulid
 
 - `src/app.js`: loob ja ekspordib Expressi rakenduse ning määrab marsruudid.

@@ -1,9 +1,17 @@
 import express from 'express';
 import { tasks } from './data/tasks.js';
 import { getAllTasks, getTaskById } from './taskFunctions.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 export const app = express();
 let nextTaskId = Math.max(0, ...tasks.map((task) => task.id)) + 1;
+
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    console.log(`${req.method} ${req.originalUrl} ${res.statusCode}`);
+  });
+  next();
+});
 
 app.use(express.json());
 
@@ -142,3 +150,10 @@ app.get('/api/tasks/:id', (req, res) => {
 
   res.json(task);
 });
+
+// These handlers must follow all routes.
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+app.use(errorHandler);
