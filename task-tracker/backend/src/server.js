@@ -1,11 +1,10 @@
 import { createApp } from './app.js';
 import { loadTasks, saveTasks } from './taskStorage.js';
+import { port, tasksFile } from './config.js';
 
-const port = 3000;
-const filePath = './data/tasks.json';
-const tasks = await loadTasks(filePath);
+const tasks = await loadTasks(tasksFile);
 const app = createApp(tasks, (updatedTasks) =>
-  saveTasks(filePath, updatedTasks),
+  saveTasks(tasksFile, updatedTasks),
 );
 
 app.listen(port, () => {

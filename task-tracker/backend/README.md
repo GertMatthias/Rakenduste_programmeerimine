@@ -2,7 +2,7 @@
 
 ## Eeldused
 
-Arvutis peavad olema Node.js ja npm. Kontrolli käsuga `node --version` ja
+Arvutis peavad olema Node.js 22.9 või uuem ja npm. Kontrolli käsuga `node --version` ja
 `npm --version`.
 
 ## Paigaldamine ja käivitamine
@@ -25,8 +25,31 @@ Juuraadress `/` vastab `404`-ga; API marsruudid algavad `/api`-ga.
 Kui näed viga `EADDRINUSE`, on port 3000 juba kasutusel: peata varasem
 backend'i protsess selle terminalis, seejärel käivita uuesti.
 
-`npm start` käivitab backend'i `package.json` failis määratud käsu `node src/server.js`.
+`npm start` käivitab käsu `node --env-file-if-exists=.env src/server.js`.
 Käivita see backend'i kaustas, et npm kasutaks õiget `package.json` faili.
+
+## Backend'i seadistamine
+
+Õpetaja eraldi keskkonnamuutujate laadimise näidet polnud kaasas, seega kasutame
+Node.js-i sisseehitatud `--env-file-if-exists` tuge. Backend'i kaustas võid
+kopeerida `.env.example` faili nimega `.env`. `.env` puudumisel töötavad vaikeväärtused.
+
+| Muutuja      | Vaikeväärtus        | Tähendus           |
+| ------------ | ------------------- | ------------------ |
+| `PORT`       | `3000`              | Serveri port       |
+| `TASKS_FILE` | `./data/tasks.json` | Andmefaili asukoht |
+
+Näiteks `PORT=3001` ja `TASKS_FILE=./data/other-tasks.json` kasutavad teist
+porti ja andmefaili. Suhteline failitee algab backend'i töökataloogist.
+Pärast muutmist taaskäivita backend. Kui muudad porti, uuenda ka frontend'i
+`VITE_API_URL` väärtust ning taaskäivita Vite.
+
+`src/config.js` loeb väärtused `process.env` kaudu. Keskkonnamuutujad on tekstid,
+seega teisendatakse port `Number()` abil arvuks ja kontrollitakse selle vahemikku.
+Seadistus on marsruutidest eraldi, et keskkonna muutmine ei nõuaks API loogika muutmist.
+Protsessi keskkonnas juba määratud väärtused on `.env` failist tähtsamad.
+`.env.example` kuulub Giti ja sisaldab ainult näiteid; `.env` on ignoreeritud.
+Saladusi ei tohi `.env.example` faili ega Gitisse lisada.
 
 ## Ülesannete lugemine
 
