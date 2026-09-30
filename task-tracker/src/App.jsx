@@ -5,7 +5,12 @@ import { TaskForm } from './components/TaskForm.jsx';
 import { Routes, Route, NavLink } from 'react-router-dom';
 import { TaskDetails } from './components/TaskDetails.jsx';
 import { PageSection } from './components/PageSection.jsx';
-import { getTasks } from './services/taskApi.js';
+import {
+  getTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+} from './services/taskApi.js';
 import './App.css';
 
 function App() {
@@ -13,6 +18,8 @@ function App() {
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -54,36 +61,44 @@ function App() {
     return true;
   });
 
-  function handleAddTask(title) {
-    setTasks((previousTasks) => {
-      const nextId = Math.max(0, ...previousTasks.map((task) => task.id)) + 1;
-
-      const newTask = {
-        id: nextId,
-        title: title,
-        completed: false,
-      };
-
-      return [...previousTasks, newTask];
-    });
+  async function handleAddTask(title) {
+    const newTask = await createTask(title);
+    setTasks((previousTasks) => [...previousTasks, newTask]);
   }
 
-  function handleToggleTask(taskId) {
-    setTasks((previousTasks) =>
-      previousTasks.map((task) => {
-        if (task.id === taskId) {
-          return { ...task, completed: !task.completed };
-        }
+  async function handleToggleTask(taskId) {
+    const task = tasks.find((task) => task.id === taskId);
+    setActionError('');
+    setBusy(true);
 
-        return task;
-      }),
-    );
+    try {
+      const updatedTask = await updateTask(taskId, {
+        completed: !task.completed,
+      });
+      setTasks((previousTasks) =>
+        previousTasks.map((task) => (task.id === taskId ? updatedTask : task)),
+      );
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function handleDeleteTask(taskId) {
-    setTasks((previousTasks) =>
-      previousTasks.filter((task) => task.id !== taskId),
-    );
+  async function handleDeleteTask(taskId) {
+    setActionError('');
+    setBusy(true);
+
+    try {
+      await deleteTask(taskId);
+      setTasks((previousTasks) =>
+        previousTasks.filter((task) => task.id !== taskId),
+      );
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (loading) {
@@ -105,6 +120,7 @@ function App() {
         <NavLink to="/tasks">Ülesanded</NavLink>
       </nav>
       <main>
+        {actionError && <p role="alert">{actionError}</p>}
         <Routes>
           <Route
             path="/"
@@ -152,6 +168,7 @@ function App() {
                     task={task}
                     onToggle={handleToggleTask}
                     onDelete={handleDeleteTask}
+                    disabled={busy}
                   />
                 ))}
               </PageSection>

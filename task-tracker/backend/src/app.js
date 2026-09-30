@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { tasks } from './data/tasks.js';
 import { getAllTasks, getTaskById } from './taskFunctions.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -13,6 +14,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }));
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {

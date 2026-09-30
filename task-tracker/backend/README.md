@@ -68,7 +68,43 @@ Invoke-RestMethod -Method Post -Uri 'http://localhost:3000/api/tasks' -ContentTy
 Seejärel ava brauseris `http://localhost:3000/api/tasks`, et näha uut ülesannet.
 Brauseri aadressiriba teeb GET-päringu, mitte POST-päringut.
 Andmed on praegu serveri mälus: taaskäivitamine taastab algandmed.
-Reacti vorm ei ole veel selle API-ga ühendatud.
+Reacti vorm kasutab nüüd seda API-t.
+
+## Reacti ühendamine backend'iga
+
+Käivita backend'i kaustas `npm start` ja teises terminalis `task-tracker`
+kaustas `npm run dev`. Ava Vite'i leht pordil 5173. Mõlemad protsessid
+peavad töötama korraga.
+
+Frontend'i `.env.development` määrab `VITE_API_URL=http://localhost:3000/api`.
+Kohaliku ülekirjutuse saab panna `.env.local` faili, mis on Gitist välja jäetud.
+`.env.example` sisaldab konfiguratsiooni näidet. Pärast muutmist taaskäivita Vite.
+Kõik ülesannete päringud lähevad läbi `src/services/taskApi.js`.
+Laadimine kasutab GET-i, lisamine POST-i, staatuse muutmine PATCH-i ja
+kustutamine DELETE-i. React kasutab serveri tagastatud ülesannet ja ID-d.
+Vea korral kuvatakse teade ja ebaõnnestunud lisamine ei tühjenda sisestust.
+
+Backend'i `cors` seadistus lubab brauseril vastuseid lugeda origin'idelt
+`http://localhost:5173` ja `http://127.0.0.1:5173`. Origin koosneb
+protokollist, hostist ja pordist; URL-i alamrada sinna ei kuulu.
+Kui kasutad muud frontend'i porti või avalikku aadressi, muuda `app.js`
+CORS-i lubatud origin'ide loendit ja taaskäivita backend.
+CORS ei ole autentimine ega takista terminalist päringute tegemist.
+
+Lehe värskendamisel jäävad serveris loodud ülesanded alles. Backend'i
+taaskäivitamisel taastuvad praegu algandmed.
+
+### GitHub Pages
+
+Avaldatud frontend vajab internetis töötavat HTTPS-backend'i. Külastaja
+`localhost` tähendab külastaja enda arvutit, mitte arendaja serverit.
+GitHub Pages ei käivita Expressi. Seadista enne tootmise build'i
+`VITE_API_URL` avaliku backend'i aadressiks (koos `/api` rajaga) ja luba
+backend'i CORS-is GitHub Pagesi origin. Keskkonnamuutuja muutmise järel tuleb
+frontend uuesti ehitada ja avaldada, sest Vite lisab väärtuse ehitatud koodi.
+Praegu pole avalikku backend'i seadistatud: uus tootmisversioon kuvab puuduva
+API-aadressi teate. Varasemat JSON-faili enam varuallikana ei kasutata.
+VITE-muutujad on brauseris nähtavad ja neisse ei panda saladusi.
 
 ## Ülesande muutmine ja kustutamine
 
