@@ -21,12 +21,34 @@ Server jääb tööle pordil 3000. Ava brauseris
 
 `localhost` tähendab sinu enda arvutit ja port eristab sellel töötavaid teenuseid.
 Backend töötab frontend'i Vite'i arendusserverist eraldi protsessina.
-Praegu on olemas ainult tervisekontrolli marsruut; `/` vastab `404`-ga.
+Juuraadress `/` vastab `404`-ga; API marsruudid algavad `/api`-ga.
 Kui näed viga `EADDRINUSE`, on port 3000 juba kasutusel: peata varasem
 backend'i protsess selle terminalis, seejärel käivita uuesti.
 
 `npm start` käivitab backend'i `package.json` failis määratud käsu `node src/server.js`.
 Käivita see backend'i kaustas, et npm kasutaks õiget `package.json` faili.
+
+## Ülesannete lugemine
+
+Kõigi näidete serveriaadress on `http://localhost:3000`.
+
+| Päring                           | Tulemus                             |
+| -------------------------------- | ----------------------------------- |
+| `GET /api/tasks`                 | `200`, kõik ülesanded               |
+| `GET /api/tasks/2`               | `200`, ülesanne ID-ga 2             |
+| `GET /api/tasks?completed=true`  | `200`, tehtud ülesanded             |
+| `GET /api/tasks?completed=false` | `200`, tegemata ülesanded           |
+| `GET /api/tasks/999`             | `404`, `{"error":"Task not found"}` |
+| `GET /api/tasks?completed=yes`   | `400`, vigane filtriväärtus         |
+| `GET /api/tasks/abc`             | `400`, vigane ID                    |
+
+`req.params.id` tuleb URL-i teest, `req.query.completed` päringuparameetrist.
+ID teisendatakse arvuks. Filtri puhul lubatakse ainult tekste `true` ja `false`:
+`Boolean('false')` oleks ekslikult `true`, sest tegemist on mittetühja tekstiga.
+Filtreerimine ei muuda algandmeid.
+
+Pärast backend'i koodi muutmist peata server `Ctrl+C` abil ja käivita uuesti
+`npm start`, et uus kood kasutusele võetaks.
 
 ## Moodulid
 
