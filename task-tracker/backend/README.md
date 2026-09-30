@@ -70,6 +70,30 @@ Brauseri aadressiriba teeb GET-päringu, mitte POST-päringut.
 Andmed on praegu serveri mälus: taaskäivitamine taastab algandmed.
 Reacti vorm ei ole veel selle API-ga ühendatud.
 
+## Ülesande muutmine ja kustutamine
+
+`PATCH /api/tasks/:id` muudab pealkirja ja/või staatust ning tagastab uuendatud
+ülesande staatusega `200`. Saatmata väljad jäävad samaks.
+Pealkiri peab olema mittetühi tekst ja selle ääretühikud eemaldatakse.
+`completed` peab olema tõeväärtus `true` või `false`, mitte tekst.
+Tühi muudatusobjekt, muud väljad (näiteks `id`) ja vigased väärtused annavad `400`.
+Kõik väljad kontrollitakse enne ülesande muutmist.
+
+```powershell
+Invoke-RestMethod -Method Patch -Uri 'http://localhost:3000/api/tasks/2' -ContentType 'application/json' -Body '{"title":"  Learn Express routes  ","completed":true}'
+```
+
+`DELETE /api/tasks/:id` eemaldab ülesande ja tagastab `204` ilma vastusekehata.
+Seda vastust ei tohi proovida JSON-ina lugeda.
+
+```powershell
+Invoke-WebRequest -UseBasicParsing -Method Delete -Uri 'http://localhost:3000/api/tasks/2' | Select-Object StatusCode
+```
+
+Mõlema marsruudi puhul annab puuduv ülesanne `404` ja vigane ID `400`.
+Pärast kustutamist ei sisalda `GET /api/tasks` enam seda ülesannet ning
+`GET /api/tasks/2` annab `404`. Taaskäivitamine taastab praegu algandmed.
+
 ## Moodulid
 
 - `src/app.js`: loob ja ekspordib Expressi rakenduse ning määrab marsruudid.

@@ -47,6 +47,84 @@ app.post('/api/tasks', (req, res) => {
   res.status(201).json(task);
 });
 
+app.patch('/api/tasks/:id', (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isSafeInteger(id) || id < 1) {
+    return res
+      .status(400)
+      .json({ error: 'Task ID must be a positive integer' });
+  }
+
+  const task = getTaskById(tasks, id);
+
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
+  const updates = req.body;
+
+  if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
+    return res
+      .status(400)
+      .json({ error: 'Send an object with title or completed' });
+  }
+
+  const fields = Object.keys(updates);
+
+  if (
+    fields.length === 0 ||
+    fields.some((field) => field !== 'title' && field !== 'completed')
+  ) {
+    return res
+      .status(400)
+      .json({ error: 'Only title and completed can be updated' });
+  }
+
+  if (
+    Object.hasOwn(updates, 'title') &&
+    (typeof updates.title !== 'string' || updates.title.trim() === '')
+  ) {
+    return res.status(400).json({ error: 'Title must be a non-empty string' });
+  }
+
+  if (
+    Object.hasOwn(updates, 'completed') &&
+    typeof updates.completed !== 'boolean'
+  ) {
+    return res.status(400).json({ error: 'completed must be a boolean' });
+  }
+
+  if (Object.hasOwn(updates, 'title')) {
+    task.title = updates.title.trim();
+  }
+
+  if (Object.hasOwn(updates, 'completed')) {
+    task.completed = updates.completed;
+  }
+
+  res.json(task);
+});
+
+app.delete('/api/tasks/:id', (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isSafeInteger(id) || id < 1) {
+    return res
+      .status(400)
+      .json({ error: 'Task ID must be a positive integer' });
+  }
+
+  const index = tasks.findIndex((task) => task.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
+  tasks.splice(index, 1);
+  res.status(204).end();
+});
+
 app.get('/api/tasks/:id', (req, res) => {
   const id = Number(req.params.id);
 
