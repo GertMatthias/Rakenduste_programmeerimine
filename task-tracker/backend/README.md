@@ -67,7 +67,7 @@ Invoke-RestMethod -Method Post -Uri 'http://localhost:3000/api/tasks' -ContentTy
 
 Seejärel ava brauseris `http://localhost:3000/api/tasks`, et näha uut ülesannet.
 Brauseri aadressiriba teeb GET-päringu, mitte POST-päringut.
-Andmed on praegu serveri mälus: taaskäivitamine taastab algandmed.
+Andmed salvestatakse backend'i `data/tasks.json` faili.
 Reacti vorm kasutab nüüd seda API-t.
 
 ## Reacti ühendamine backend'iga
@@ -91,8 +91,7 @@ Kui kasutad muud frontend'i porti või avalikku aadressi, muuda `app.js`
 CORS-i lubatud origin'ide loendit ja taaskäivita backend.
 CORS ei ole autentimine ega takista terminalist päringute tegemist.
 
-Lehe värskendamisel jäävad serveris loodud ülesanded alles. Backend'i
-taaskäivitamisel taastuvad praegu algandmed.
+Ülesanded jäävad alles nii lehe värskendamisel kui ka backend'i taaskäivitamisel.
 
 ### GitHub Pages
 
@@ -128,7 +127,7 @@ Invoke-WebRequest -UseBasicParsing -Method Delete -Uri 'http://localhost:3000/ap
 
 Mõlema marsruudi puhul annab puuduv ülesanne `404` ja vigane ID `400`.
 Pärast kustutamist ei sisalda `GET /api/tasks` enam seda ülesannet ning
-`GET /api/tasks/2` annab `404`. Taaskäivitamine taastab praegu algandmed.
+`GET /api/tasks/2` annab `404`. Kustutamine säilib ka taaskäivitamisel.
 
 ## Middleware ja veakäsitlus
 
@@ -165,10 +164,34 @@ Expressi rakendusele ja haldab vajalikku ajutist kuulamist ise. Kontrollitakse
 GET-i, edukat POST-i, tühja pealkirja tagasilükkamist, puuduvat ülesannet ning
 DELETE-i. Testid kontrollivad nii staatusekoode kui ka vastuste sisu.
 
-`beforeEach` loob `createApp(seedTasks)` abil uue rakenduse koos ülesandeobjektide
-koopiatega ja uue ID-loenduriga. Testid ei kasuta töötava serveri andmeid ega
+`beforeEach` loob unikaalse ajutise kausta, kirjutab sinna testi algandmed ja
+loob uue rakenduse koos eraldi ID-loenduriga. `afterEach` kustutab ajutise kausta
+ka ebaõnnestunud kontrolli korral. Testid ei kasuta töötava serveri andmeid ega
 sõltu üksteise järjekorrast. `app.listen()` jääb eraldi `server.js` faili.
 Backend'i Vitest kasutab Node.js-i keskkonda; frontend'i testid kasutavad jsdom-i.
+
+## JSON-faili salvestamine
+
+`src/taskStorage.js` ekspordib `loadTasks(filePath)` ja `saveTasks(filePath, tasks)`.
+`node:fs/promises` pakub asünkroonset failide lugemist ja kirjutamist.
+`JSON.stringify` teisendab massiivi tekstiks, `JSON.parse` teksti tagasi väärtuseks.
+Puuduv fail annab praegu tühja loendi; vigane JSON või vale juurtüüp peatab
+käivitamise. Lugemine ei kirjuta faili.
+
+`server.js` laadib enne kuulamise alustamist `./data/tasks.json` ja annab
+`createApp`-ile salvestusfunktsiooni. POST, PATCH ja DELETE ootavad salvestamise
+lõpuni enne eduka vastuse saatmist ja mälus oleva loendi asendamist.
+`serialize` paneb muutmispäringud ühte järjekorda; kirjutamine kasutab ajutist
+faili ning nimetab selle alles pärast edukat kirjutamist sihtfailiks.
+See lahendus eeldab üht backend'i protsessi ühe andmefaili kohta.
+
+Andmekaust on Gitist välja jäetud. Uues kloonis alustab backend puuduva faili
+korral tühja loendiga; esimene lisamine loob faili. Taaskäivitamisel laaditakse
+salvestatud ülesanded. Suuremas rakenduses on sobivam andmebaas, mis toetab
+tehinguid, tõhusat otsingut ja mitut samaaegset serveriprotsessi.
+
+Kontroll: loo Reactis ülesanne, taaskäivita backend (`Ctrl+C`, `npm start`)
+ja värskenda Reacti lehte. Ülesanne peab alles olema.
 
 ## Moodulid
 

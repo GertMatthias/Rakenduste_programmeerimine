@@ -4,10 +4,27 @@ import { tasks as initialTasks } from './data/tasks.js';
 import { getAllTasks, getTaskById } from './taskFunctions.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
-export function createApp(seedTasks = initialTasks) {
-  const tasks = seedTasks.map((task) => ({ ...task }));
+export function createApp(
+  seedTasks = initialTasks,
+  persistTasks = async () => {},
+) {
+  let tasks = seedTasks.map((task) => ({ ...task }));
   const app = express();
   let nextTaskId = Math.max(0, ...tasks.map((task) => task.id)) + 1;
+  let mutationQueue = Promise.resolve();
+
+  function serialize(handler) {
+    return (req, res, next) => {
+      const operation = mutationQueue.then(() => handler(req, res));
+      mutationQueue = operation.catch(() => {});
+      operation.catch(next);
+    };
+  }
+
+  async function commitTasks(updatedTasks) {
+    await persistTasks(updatedTasks);
+    tasks = updatedTasks;
+  }
 
   app.use((req, res, next) => {
     res.on('finish', () => {
@@ -42,106 +59,119 @@ export function createApp(seedTasks = initialTasks) {
     res.json(filteredTasks);
   });
 
-  app.post('/api/tasks', (req, res) => {
-    const title = req.body?.title;
+  app.post(
+    '/api/tasks',
+    serialize(async (req, res) => {
+      const title = req.body?.title;
 
-    if (typeof title !== 'string' || title.trim() === '') {
-      return res
-        .status(400)
-        .json({ error: 'Title must be a non-empty string' });
-    }
+      if (typeof title !== 'string' || title.trim() === '') {
+        return res
+          .status(400)
+          .json({ error: 'Title must be a non-empty string' });
+      }
 
-    const task = {
-      id: nextTaskId,
-      title: title.trim(),
-      completed: false,
-    };
+      const task = {
+        id: nextTaskId,
+        title: title.trim(),
+        completed: false,
+      };
 
-    nextTaskId += 1;
-    tasks.push(task);
+      await commitTasks([...tasks, task]);
+      nextTaskId += 1;
 
-    res.status(201).json(task);
-  });
+      res.status(201).json(task);
+    }),
+  );
 
-  app.patch('/api/tasks/:id', (req, res) => {
-    const id = Number(req.params.id);
+  app.patch(
+    '/api/tasks/:id',
+    serialize(async (req, res) => {
+      const id = Number(req.params.id);
 
-    if (!Number.isSafeInteger(id) || id < 1) {
-      return res
-        .status(400)
-        .json({ error: 'Task ID must be a positive integer' });
-    }
+      if (!Number.isSafeInteger(id) || id < 1) {
+        return res
+          .status(400)
+          .json({ error: 'Task ID must be a positive integer' });
+      }
 
-    const task = getTaskById(tasks, id);
+      const task = getTaskById(tasks, id);
 
-    if (!task) {
-      return res.status(404).json({ error: 'Task not found' });
-    }
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
 
-    const updates = req.body;
+      const updates = req.body;
 
-    if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
-      return res
-        .status(400)
-        .json({ error: 'Send an object with title or completed' });
-    }
+      if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
+        return res
+          .status(400)
+          .json({ error: 'Send an object with title or completed' });
+      }
 
-    const fields = Object.keys(updates);
+      const fields = Object.keys(updates);
 
-    if (
-      fields.length === 0 ||
-      fields.some((field) => field !== 'title' && field !== 'completed')
-    ) {
-      return res
-        .status(400)
-        .json({ error: 'Only title and completed can be updated' });
-    }
+      if (
+        fields.length === 0 ||
+        fields.some((field) => field !== 'title' && field !== 'completed')
+      ) {
+        return res
+          .status(400)
+          .json({ error: 'Only title and completed can be updated' });
+      }
 
-    if (
-      Object.hasOwn(updates, 'title') &&
-      (typeof updates.title !== 'string' || updates.title.trim() === '')
-    ) {
-      return res
-        .status(400)
-        .json({ error: 'Title must be a non-empty string' });
-    }
+      if (
+        Object.hasOwn(updates, 'title') &&
+        (typeof updates.title !== 'string' || updates.title.trim() === '')
+      ) {
+        return res
+          .status(400)
+          .json({ error: 'Title must be a non-empty string' });
+      }
 
-    if (
-      Object.hasOwn(updates, 'completed') &&
-      typeof updates.completed !== 'boolean'
-    ) {
-      return res.status(400).json({ error: 'completed must be a boolean' });
-    }
+      if (
+        Object.hasOwn(updates, 'completed') &&
+        typeof updates.completed !== 'boolean'
+      ) {
+        return res.status(400).json({ error: 'completed must be a boolean' });
+      }
 
-    if (Object.hasOwn(updates, 'title')) {
-      task.title = updates.title.trim();
-    }
+      const updatedTask = { ...task };
+      if (Object.hasOwn(updates, 'title')) {
+        updatedTask.title = updates.title.trim();
+      }
 
-    if (Object.hasOwn(updates, 'completed')) {
-      task.completed = updates.completed;
-    }
+      if (Object.hasOwn(updates, 'completed')) {
+        updatedTask.completed = updates.completed;
+      }
 
-    res.json(task);
-  });
+      await commitTasks(
+        tasks.map((task) => (task.id === id ? updatedTask : task)),
+      );
+      res.json(updatedTask);
+    }),
+  );
 
-  app.delete('/api/tasks/:id', (req, res) => {
-    const id = Number(req.params.id);
+  app.delete(
+    '/api/tasks/:id',
+    serialize(async (req, res) => {
+      const id = Number(req.params.id);
 
-    if (!Number.isSafeInteger(id) || id < 1) {
-      return res
-        .status(400)
-        .json({ error: 'Task ID must be a positive integer' });
-    }
+      if (!Number.isSafeInteger(id) || id < 1) {
+        return res
+          .status(400)
+          .json({ error: 'Task ID must be a positive integer' });
+      }
 
-    const index = tasks.findIndex((task) => task.id === id);
+      const index = tasks.findIndex((task) => task.id === id);
 
-    if (index === -1) {
-      return res.status(404).json({ error: 'Task not found' });
-    }
+      if (index === -1) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
 
-    tasks.splice(index, 1);
-    res.status(204).end();
-  });
+      await commitTasks(tasks.filter((task) => task.id !== id));
+      res.status(204).end();
+    }),
+  );
 
   app.get('/api/tasks/:id', (req, res) => {
     const id = Number(req.params.id);

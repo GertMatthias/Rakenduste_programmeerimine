@@ -1,6 +1,10 @@
 import request from 'supertest';
-import { beforeEach, expect, test } from 'vitest';
+import { afterEach, beforeEach, expect, test } from 'vitest';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createApp } from './app.js';
+import { loadTasks, saveTasks } from './taskStorage.js';
 
 const seedTasks = [
   { id: 1, title: 'Learn JSX', completed: true },
@@ -8,9 +12,20 @@ const seedTasks = [
 ];
 
 let app;
+let directory;
+let filePath;
 
-beforeEach(() => {
-  app = createApp(seedTasks);
+beforeEach(async () => {
+  directory = await mkdtemp(join(tmpdir(), 'task-tracker-api-'));
+  filePath = join(directory, 'tasks.json');
+  await saveTasks(filePath, seedTasks);
+  app = createApp(await loadTasks(filePath), (tasks) =>
+    saveTasks(filePath, tasks),
+  );
+});
+
+afterEach(async () => {
+  if (directory) await rm(directory, { recursive: true, force: true });
 });
 
 test('GET returns tasks', async () => {
@@ -31,6 +46,9 @@ test('POST creates a valid task', async () => {
   });
   const tasks = await request(app).get('/api/tasks');
   expect(tasks.body).toContainEqual(response.body);
+  const restartedApp = createApp(await loadTasks(filePath));
+  const restored = await request(restartedApp).get('/api/tasks');
+  expect(restored.body).toContainEqual(response.body);
 });
 
 test('POST rejects an empty title', async () => {
