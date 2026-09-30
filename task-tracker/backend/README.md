@@ -155,6 +155,21 @@ Invoke-RestMethod -Method Post -Uri 'http://localhost:3000/api/tasks' -ContentTy
 
 PowerShell teatab HTTP-veast, sest vastuse staatus on `400`.
 
+## API testid
+
+Backend'i kaustas käivita `npm test`. Jälgimisrežiimi jaoks kasuta
+`npm run test:watch`. Serverit pole vaja enne käivitada.
+
+Vitest käivitab `src/app.test.js` viis testi; Supertest saadab päringud otse
+Expressi rakendusele ja haldab vajalikku ajutist kuulamist ise. Kontrollitakse
+GET-i, edukat POST-i, tühja pealkirja tagasilükkamist, puuduvat ülesannet ning
+DELETE-i. Testid kontrollivad nii staatusekoode kui ka vastuste sisu.
+
+`beforeEach` loob `createApp(seedTasks)` abil uue rakenduse koos ülesandeobjektide
+koopiatega ja uue ID-loenduriga. Testid ei kasuta töötava serveri andmeid ega
+sõltu üksteise järjekorrast. `app.listen()` jääb eraldi `server.js` faili.
+Backend'i Vitest kasutab Node.js-i keskkonda; frontend'i testid kasutavad jsdom-i.
+
 ## Moodulid
 
 - `src/app.js`: loob ja ekspordib Expressi rakenduse ning määrab marsruudid.
