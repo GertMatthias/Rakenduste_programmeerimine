@@ -2,7 +2,24 @@ import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
-import { loadTasks } from './taskStorage.js';
+import { loadTasks, saveTasks } from './taskStorage.js';
+
+test('saves and loads two tasks using a temporary file', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'task-tracker-save-load-'));
+  const filePath = join(directory, 'tasks.json');
+  const tasks = [
+    { id: 1, title: 'Learn file storage', completed: true },
+    { id: 2, title: 'Test file storage', completed: false },
+  ];
+
+  try {
+    await saveTasks(filePath, tasks);
+    const loadedTasks = await loadTasks(filePath);
+    expect(loadedTasks).toEqual(tasks);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
 
 test('loads valid data, handles missing files and preserves invalid files', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'task-tracker-load-'));
